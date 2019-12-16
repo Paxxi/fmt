@@ -25,7 +25,13 @@ target_include_directories(fmt PUBLIC
   $<INSTALL_INTERFACE:include>)
 
 set_target_properties(fmt PROPERTIES
-  VERSION ${FMT_VERSION} SOVERSION ${CPACK_PACKAGE_VERSION_MAJOR})
+  VERSION ${FMT_VERSION} SOVERSION ${CPACK_PACKAGE_VERSION_MAJOR}
+  COMPILE_PDB_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}
+  PDB_NAME fmt
+  PDB_NAME_DEBUG fmtd
+  OUTPUT_NAME fmt
+  OUTPUT_NAME_DEBUG fmtd
+)
 
 if (BUILD_SHARED_LIBS)
   if (UNIX AND NOT APPLE)
@@ -90,4 +96,14 @@ if (FMT_INSTALL)
   if (FMT_CPPFORMAT)
     install(TARGETS cppformat DESTINATION ${FMT_LIB_DIR})
   endif ()
+  install(FILES
+    ${PROJECT_BINARY_DIR}/RelWithDebInfo/fmt.pdb
+    DESTINATION lib
+    CONFIGURATIONS Debug
+  )
+  install(FILES
+    ${PROJECT_BINARY_DIR}/Debug/fmtd.pdb
+    DESTINATION lib
+    CONFIGURATIONS Debug
+  )
 endif ()
