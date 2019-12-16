@@ -99,7 +99,7 @@ if (FMT_INSTALL)
   install(FILES
     ${PROJECT_BINARY_DIR}/RelWithDebInfo/fmt.pdb
     DESTINATION lib
-    CONFIGURATIONS Debug
+    CONFIGURATIONS RelWithDebInfo
   )
   install(FILES
     ${PROJECT_BINARY_DIR}/Debug/fmtd.pdb
