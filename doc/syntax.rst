@@ -4,8 +4,9 @@
 Format String Syntax
 ********************
 
-Formatting functions such as :ref:`fmt::format() <format>` and :ref:`fmt::print() <print>`
-use the same format string syntax described in this section.
+Formatting functions such as :ref:`fmt::format() <format>` and
+:ref:`fmt::print() <print>` use the same format string syntax described in this
+section.
 
 Format strings contain "replacement fields" surrounded by curly braces ``{}``.
 Anything that is not contained in braces is considered literal text, which is
@@ -35,6 +36,8 @@ If the numerical arg_ids in a format string are 0, 1, 2, ... in sequence,
 they can all be omitted (not just some) and the numbers 0, 1, 2, ... will be
 automatically inserted in that order.
 
+Named arguments can be referred to by their names or indices.
+
 Some simple format string examples::
 
    "First, thou shalt count to {0}" // References the first argument
@@ -51,8 +54,8 @@ described in the next section.
 
 A *format_spec* field can also include nested replacement fields in certain
 positions within it. These nested replacement fields can contain only an
-argument index; format specifications are not allowed. This allows the
-formatting of a value to be dynamically specified.
+argument id; format specifications are not allowed. This allows the formatting
+of a value to be dynamically specified.
 
 See the :ref:`formatexamples` section for some examples.
 
@@ -73,7 +76,7 @@ The general form of a *standard format specifier* is:
 
 .. productionlist:: sf
    format_spec: [[`fill`]`align`][`sign`]["#"]["0"][`width`]["." `precision`][`type`]
-   fill: <a character other than '{' or '}'>
+   fill: <a character other than '{', '}' or '\0'>
    align: "<" | ">" | "=" | "^"
    sign: "+" | "-" | " "
    width: `integer` | "{" `arg_id` "}"
@@ -81,11 +84,11 @@ The general form of a *standard format specifier* is:
    type: `int_type` | "a" | "A" | "c" | "e" | "E" | "f" | "F" | "g" | "G" | "p" | "s"
    int_type: "b" | "B" | "d" | "n" | "o" | "x" | "X"
 
-The *fill* character can be any character other than '{' or '}'.  The presence
-of a fill character is signaled by the character following it, which must be
-one of the alignment options.  If the second character of *format_spec* is not
-a valid alignment option, then it is assumed that both the fill character and
-the alignment option are absent.
+The *fill* character can be any character other than '{', '}' or '\\0'. The
+presence of a fill character is signaled by the character following it, which
+must be one of the alignment options.  If the second character of *format_spec*
+is not a valid alignment option, then it is assumed that both the fill character
+and the alignment option are absent.
 
 The meaning of the various alignment options is as follows:
 
@@ -97,11 +100,6 @@ The meaning of the various alignment options is as follows:
 +---------+----------------------------------------------------------+
 | ``'>'`` | Forces the field to be right-aligned within the          |
 |         | available space (this is the default for numbers).       |
-+---------+----------------------------------------------------------+
-| ``'='`` | Forces the padding to be placed after the sign (if any)  |
-|         | but before the digits.  This is used for printing fields |
-|         | in the form '+000000120'. This alignment option is only  |
-|         | valid for numeric types.                                 |
 +---------+----------------------------------------------------------+
 | ``'^'`` | Forces the field to be centered within the available     |
 |         | space.                                                   |
@@ -151,9 +149,11 @@ conversions, trailing zeros are not removed from the result.
 *width* is a decimal integer defining the minimum field width.  If not
 specified, then the field width will be determined by the content.
 
-Preceding the *width* field by a zero (``'0'``) character enables
-sign-aware zero-padding for numeric types.  This is equivalent to a *fill*
-character of ``'0'`` with an *alignment* type of ``'='``.
+Preceding the *width* field by a zero (``'0'``) character enables sign-aware
+zero-padding for numeric types. It forces the padding to be placed after the
+sign or base (if any) but before the digits. This is used for printing fields in
+the form '+000000120'. This option is only valid for numeric types and it has no
+effect on formatting of infinity and NaN.
 
 The *precision* is a decimal number indicating how many digits should be
 displayed after the decimal point for a floating-point value formatted with
@@ -241,7 +241,7 @@ The available presentation types for floating-point values are:
 |         | notation using the letter 'e' to indicate the exponent.  |
 +---------+----------------------------------------------------------+
 | ``'E'`` | Exponent notation. Same as ``'e'`` except it uses an     |
-|         | upper-case 'E' as the separator character.               |
+|         | upper-case ``'E'`` as the separator character.           |
 +---------+----------------------------------------------------------+
 | ``'f'`` | Fixed point. Displays the number as a fixed-point        |
 |         | number.                                                  |
@@ -261,10 +261,15 @@ The available presentation types for floating-point values are:
 |         | ``'E'`` if the number gets too large. The                |
 |         | representations of infinity and NaN are uppercased, too. |
 +---------+----------------------------------------------------------+
-| none    | The same as ``'g'``.                                     |
+| ``'n'`` | Number. This is the same as ``'g'``, except that it uses |
+|         | the current locale setting to insert the appropriate     |
+|         | number separator characters.                             |
 +---------+----------------------------------------------------------+
-
-Floating-point formatting is locale-dependent.
+| none    | Similar to ``'g'``, except that fixed-point notation,    |
+|         | when used, has at least one digit past the decimal       |
+|         | point. The default precision is as high as needed to     |
+|         | represent the particular value.                          |
++---------+----------------------------------------------------------+
 
 .. ifconfig:: False
 
@@ -300,7 +305,7 @@ The available presentation types for pointers are:
 
 .. _formatexamples:
 
-Format examples
+Format Examples
 ===============
 
 This section contains examples of the format syntax and comparison with
@@ -335,6 +340,16 @@ Aligning the text and specifying a width::
    format("{:*^30}", "centered");  // use '*' as a fill char
    // Result: "***********centered***********"
 
+Dynamic width::
+
+   format("{:<{}}", "left aligned", 30);
+   // Result: "left aligned                  "
+
+Dynamic precision::
+
+   format("{:.{}f}", 3.14, 1);
+   // Result: "3.1"
+
 Replacing ``%+f``, ``%-f``, and ``% f`` and specifying a sign::
 
    format("{:+f}; {:+f}", 3.14, -3.14);  // show it always
@@ -344,6 +359,13 @@ Replacing ``%+f``, ``%-f``, and ``% f`` and specifying a sign::
    format("{:-f}; {:-f}", 3.14, -3.14);  // show only the minus -- same as '{:f}; {:f}'
    // Result: "3.140000; -3.140000"
 
+As a percentage::
+
+   format("{0:f} or {0:%}", .635);
+   // Result: "0.635000 or 63.500000%"
+   format("{:*^{}.{}%}", 1., 15, 2); // With fill, dynamic width and dynamic precision.
+   // Result: "****100.00%****"
+
 Replacing ``%x`` and ``%o`` and converting the value to different bases::
 
    format("int: {0:d};  hex: {0:x};  oct: {0:o}; bin: {0:b}", 42);
@@ -352,19 +374,17 @@ Replacing ``%x`` and ``%o`` and converting the value to different bases::
    format("int: {0:d};  hex: {0:#x};  oct: {0:#o};  bin: {0:#b}", 42);
    // Result: "int: 42;  hex: 0x2a;  oct: 052;  bin: 0b101010"
 
+Padded hex byte with prefix and always prints both hex characters::
+
+   format("{:#04x}", 0);
+   // Result: "0x00"
+
 .. ifconfig:: False
 
    Using the comma as a thousands separator::
 
       format("{:,}", 1234567890);
       '1,234,567,890'
-
-   Expressing a percentage::
-
-      >>> points = 19
-      >>> total = 22
-      Format("Correct answers: {:.2%}") << points/total)
-      'Correct answers: 86.36%'
 
    Using type-specific formatting::
 
@@ -401,4 +421,3 @@ Replacing ``%x`` and ``%o`` and converting the value to different bases::
           9     9    11  1001
          10     A    12  1010
          11     B    13  1011
-
