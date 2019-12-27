@@ -165,7 +165,7 @@
     FMT_INLINE_NAMESPACE v6 {
 #endif
 
-#if !defined(FMT_HEADER_ONLY) && defined(_WIN32)
+#if !defined(FMT_HEADER_ONLY) && (defined(_WIN32) || defined(_MSC_VER))
 #  ifdef FMT_EXPORT
 #    define FMT_API __declspec(dllexport)
 #  elif defined(FMT_SHARED)
