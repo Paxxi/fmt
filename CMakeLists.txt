@@ -176,7 +176,8 @@ target_include_directories(fmt PUBLIC
 
 set_target_properties(fmt PROPERTIES
   VERSION ${FMT_VERSION} SOVERSION ${CPACK_PACKAGE_VERSION_MAJOR}
-  DEBUG_POSTFIX d
+  OUTPUT_NAME fmt
+  OUTPUT_NAME_DEBUG fmtd
   COMPILE_PDB_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}
   COMPILE_PDB_NAME fmt
   COMPILE_PDB_NAME_DEBUG fmtd
@@ -264,11 +265,11 @@ if (FMT_INSTALL)
   install(FILES $<TARGET_PDB_FILE:${INSTALL_TARGETS}>
           DESTINATION ${FMT_LIB_DIR} OPTIONAL)
   if(NOT BUILD_SHARED_LIBS)
-    install(FILES ${PROJECT_BINARY_DIR}/RelWithDebInfo/fmt.lib
+    install(FILES ${PROJECT_BINARY_DIR}/RelWithDebInfo/fmt.pdb
       DESTINATION lib
       CONFIGURATIONS RelWithDebInfo
     )
-    install(FILES ${PROJECT_BINARY_DIR}/Debug/fmtd.lib
+    install(FILES ${PROJECT_BINARY_DIR}/Debug/fmtd.pdb
       DESTINATION lib
       CONFIGURATIONS Debug
     )
